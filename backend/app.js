@@ -9,14 +9,17 @@ const app = express();
 app.use(express.json());
 
 const userRoutes = require("./routes/userRoutes");
+const messageRoutes = require("./routes/messageRoutes");
+
 app.use("/api/users", userRoutes);
+app.use("/api/messages", messageRoutes);
 
+// static images
+app.use("/uploads", express.static("uploads"));
+
+// DB connection
 mongoose.connect(process.env.MONGO_URI)
-    .then(()=> console.log("MongoDB Connected"))
-    .catch((err)=> console.log(err));
+  .then(() => console.log("MongoDB Connected"))
+  .catch(err => console.log(err));
 
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT,()=>{
-    console.log(`Server running on port ${PORT}`);
-});
+module.exports = app;  

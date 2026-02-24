@@ -7,6 +7,29 @@ const messageSchema = new mongoose.Schema({
         required:true
     },
     receiver:{
-        type:mongoose.Schema.Types.ObjectId
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"User",
+        required:true
+    },
+    text:{
+        type:String,
+        trim:true
+    },
+    image:{
+        type:String,
+
+    },
+    messageType:{
+        type:String,
+        enum:["text","image"],
+        default:"text"
+    },
+    seen:{
+        type:Boolean,
+        default:false
     }
-})
+},{timestamps:true})
+
+Message = mongoose.model("Message",messageSchema);
+
+module.exports = Message;
