@@ -1,25 +1,18 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-
-dotenv.config();
+const cors = require("cors");
+require("dotenv").config();
 
 const app = express();
 
+app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
 
-const userRoutes = require("./routes/userRoutes");
-const messageRoutes = require("./routes/messageRoutes");
-
-app.use("/api/users", userRoutes);
-app.use("/api/messages", messageRoutes);
-
-// static images
-app.use("/uploads", express.static("uploads"));
-
-// DB connection
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected"))
   .catch(err => console.log(err));
 
-module.exports = app;  
+app.use("/api/users", require("./routes/userRoutes"));
+app.use("/api/messages", require("./routes/messageRoutes"));
+
+module.exports = app;
