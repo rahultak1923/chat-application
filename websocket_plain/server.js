@@ -2,33 +2,78 @@ const WebSocket = require("ws");
 
 const server = new WebSocket.Server({ port: 3000 });
 
+let users = [];
+
 server.on("connection", (socket) => {
-  console.log("New user connected");
 
   socket.on("message", (message) => {
 
     const data = JSON.parse(message.toString());
 
-    const username = data.username;
-    const text = data.message;
+    // USER JOIN
+    if (data.type === "join") {
 
-    const finalMessage = username + ": " + text;
+      socket.username = data.username;
 
-    console.log(finalMessage);
+      users.push(socket.username);
 
-    // broadcast
-    server.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(finalMessage);
-      }
-    });
+      broadcastMessage(socket.username + " joined the chat");
+
+      sendUserList();
+
+    }
+
+    // CHAT MESSAGE
+    if (data.type === "message") {
+
+      broadcastMessage(socket.username + ": " + data.message);
+
+    }
 
   });
 
   socket.on("close", () => {
-    console.log("User disconnected");
+
+    if (socket.username) {
+
+      users = users.filter(user => user !== socket.username);
+
+      broadcastMessage(socket.username + " left the chat");
+
+      sendUserList();
+
+    }
+
   });
 
 });
+
+// SEND MESSAGE TO ALL
+function broadcastMessage(msg) {
+
+  server.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify({
+        type: "chat",
+        message: msg
+      }));
+    }
+  });
+
+}
+
+// SEND USER LIST
+function sendUserList() {
+
+  server.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify({
+        type: "users",
+        users: users
+      }));
+    }
+  });
+
+}
 
 console.log("WebSocket Server running on ws://localhost:3000");

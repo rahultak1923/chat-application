@@ -2,48 +2,114 @@
 <html>
 <head>
 <title>WebSocket Chat</title>
+
+<style>
+
+body{
+font-family: Arial;
+display:flex;
+gap:20px;
+}
+
+#chatBox{
+width:60%;
+border:1px solid #ccc;
+padding:10px;
+}
+
+#usersBox{
+width:30%;
+border:1px solid #ccc;
+padding:10px;
+}
+
+ul{
+list-style:none;
+padding:0;
+}
+
+</style>
+
 </head>
+
 <body>
 
-<h2>WebSocket Chat</h2>
+<div id="chatBox">
 
-<input type="text" id="username" placeholder="Enter username"><br><br>
+<h3>Chat</h3>
+
+<input type="text" id="username" placeholder="Enter username">
+<button onclick="joinChat()">Join</button>
+
+<br><br>
 
 <input type="text" id="messageInput" placeholder="Type message">
 <button onclick="sendMessage()">Send</button>
 
 <ul id="messages"></ul>
 
+</div>
+
+<div id="usersBox">
+
+<h3>Online Users</h3>
+
+<ul id="users"></ul>
+
+</div>
+
 <script>
 
 const socket = new WebSocket("ws://localhost:3000");
 
-socket.onopen = () => {
-  console.log("Connected to server");
+function joinChat(){
+
+const username = document.getElementById("username").value;
+
+socket.send(JSON.stringify({
+type:"join",
+username:username
+}));
+
+}
+
+socket.onmessage = (event)=>{
+
+const data = JSON.parse(event.data);
+
+if(data.type === "chat"){
+
+const li = document.createElement("li");
+li.textContent = data.message;
+document.getElementById("messages").appendChild(li);
+
+}
+
+if(data.type === "users"){
+
+const usersList = document.getElementById("users");
+usersList.innerHTML="";
+
+data.users.forEach(user=>{
+const li = document.createElement("li");
+li.textContent = user;
+usersList.appendChild(li);
+});
+
+}
+
 };
 
-socket.onmessage = (event) => {
+function sendMessage(){
 
-  const li = document.createElement("li");
-  li.textContent = event.data;
+const message = document.getElementById("messageInput").value;
 
-  document.getElementById("messages").appendChild(li);
+socket.send(JSON.stringify({
+type:"message",
+message:message
+}));
 
-};
-
-function sendMessage() {
-
-  const username = document.getElementById("username").value;
-  const message = document.getElementById("messageInput").value;
-
-  const data = {
-    username: username,
-    message: message
-  };
-
-  socket.send(JSON.stringify(data));
-
-  document.getElementById("messageInput").value = "";
+document.getElementById("messageInput").value="";
 
 }
 
